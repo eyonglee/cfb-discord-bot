@@ -15,7 +15,10 @@ class Test(commands.Cog):
     )
     async def test(self, interaction: discord.Interaction):
         """A simple test command."""
+        channel = interaction.channel
         await interaction.response.send_message("Test command executed successfully!", ephemeral=True)
+
+        await channel.send("This message is sent to the channel as a test.")
 
     @app_commands.command(
         name="list_users",

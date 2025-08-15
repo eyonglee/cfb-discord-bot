@@ -27,11 +27,11 @@ def main():
     db_port = os.getenv('DB_PORT', '5432')
     db_name = os.getenv('DB_NAME', 'cfb26')
     db_user = os.getenv('DB_USER', 'ethan')
-    db_password = os.getenv('DB_PASSWORD', 'WarEagles544!')
+    db_password = os.getenv('DB_PASSWORD', 'WarEagle')
 
     # Path to CSV file
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    csv_file = os.path.join(script_dir, 'teams.csv')
+    csv_file = os.path.join(script_dir, '../data/teams.csv')
 
     # Read team names from CSV
     try:
