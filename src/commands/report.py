@@ -3,6 +3,7 @@ from discord import app_commands, ui
 from discord.ext import commands
 
 from src.db import get_teams, add_result, get_users, get_team
+from src.utils import validate_user, validate_opponent
 
 
 # Modal for collecting scores, notes, and remembering opponent name
@@ -128,23 +129,6 @@ class Report(commands.Cog):
     async def _load_teams(self):
         self.teams = await get_teams()
 
-    async def _validate_user(self, interaction: discord.Interaction) -> None:
-        user = await get_users()
-        if not any(interaction.user.id in d.values() for d in user):
-            await interaction.response.send_message(
-                "You are not a coach! Please contact an admin.",
-                ephemeral=True
-            )
-            return False
-        return True
-
-    async def _validate_opponent(self, interaction: discord.Interaction, opponent: str) -> int | None:
-        try:
-            return int(opponent)
-        except ValueError:
-            await interaction.response.send_message("Invalid opponent selection.", ephemeral=True)
-            return
-
     @app_commands.command(
         name="report",
         description="Report your result or issue."
@@ -154,10 +138,10 @@ class Report(commands.Cog):
     )
     async def report(self, interaction: discord.Interaction, opponent: str):
         """Record a report via slash command."""
-        if not await self._validate_user(interaction):
+        if not await validate_user(interaction):
             return
 
-        opponent_id = await self._validate_opponent(interaction, opponent)
+        opponent_id = await validate_opponent(interaction, opponent)
 
         await interaction.response.send_modal(ReportModal(opponent_id, interaction.user.id))
 

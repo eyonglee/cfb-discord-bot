@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from src.db import get_users
+from src.utils import validate_admin
 
 class Test(commands.Cog):
     def __init__(self, bot):
@@ -15,6 +16,9 @@ class Test(commands.Cog):
     )
     async def test(self, interaction: discord.Interaction):
         """A simple test command."""
+        if not await validate_admin(interaction):
+            return
+        
         channel = interaction.channel
         await interaction.response.send_message("Test command executed successfully!", ephemeral=True)
 
