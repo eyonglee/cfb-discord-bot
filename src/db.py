@@ -69,6 +69,17 @@ async def get_user(discord_id: int):
     async with pool.acquire() as conn:
         row = await conn.fetchrow("SELECT * FROM users WHERE discord_id = $1;", discord_id)
         return dict(row) if row else None
+    
+async def get_user_team(discord_id: int):
+    """Fetch the team associated with a specific user by their Discord ID."""
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow("""
+            SELECT u.*, t.* FROM teams t
+            JOIN users u ON t.team_id = u.team_id
+            WHERE u.discord_id = $1;
+        """, discord_id)
+        return dict(row) if row else None
 
 async def add_result(result):
     """
@@ -102,3 +113,66 @@ async def add_result(result):
             result["opponent_score"],
             result["user_win"]
         )
+
+async def get_active_week():
+    """
+    Fetch the currently active week number from the weeks table.
+    """
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT week_num FROM weeks WHERE active = TRUE LIMIT 1;"
+        )
+        return row["week_num"] if row else None
+    
+async def get_games_from_week(week_num: int):
+    """
+    Fetch all games from a specific week.
+    """
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch("SELECT * FROM games WHERE week_num = $1;", week_num)
+        return [dict(row) for row in rows]
+    
+async def get_games_from_user(discord_id: int):
+    """
+    Fetch all games reported by a specific user.
+    """
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch("SELECT * FROM games WHERE discord_id = $1;", discord_id)
+        return [dict(row) for row in rows]
+    
+async def get_game(week_num: int, discord_id: int):
+    """
+    Fetch a specific game reported by a user in a specific week.
+    """
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT * FROM games WHERE week_num = $1 AND discord_id = $2;",
+            week_num,
+            discord_id
+        )
+        return dict(row) if row else None
+    
+
+async def get_standings():
+    """
+    Calculate and return the current standings of all users.
+    Returns a list of dicts with keys: discord_id, wins, losses, ties, total_games
+    """
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch("""
+            SELECT 
+                discord_id,
+                SUM(CASE WHEN user_win = TRUE THEN 1 ELSE 0 END) AS wins,
+                SUM(CASE WHEN user_win = FALSE THEN 1 ELSE 0 END) AS losses,
+                SUM(CASE WHEN user_win IS NULL THEN 1 ELSE 0 END) AS ties,
+                COUNT(*) AS total_games
+            FROM games
+            GROUP BY discord_id
+            ORDER BY wins DESC, losses ASC, ties DESC;
+        """)
+        return [dict(row) for row in rows]

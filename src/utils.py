@@ -2,11 +2,15 @@ import discord
 
 from src.db import get_users
 
+async def is_admin(interaction: discord.Interaction) -> bool:
+    users = await get_users()
+    return any(interaction.user.id in d.values() and d.get("admin") for d in users)
+
 async def validate_admin(interaction: discord.Interaction) -> bool:
     user = await get_users()
     if not any(interaction.user.id in d.values() and d.get("admin") for d in user):
         await interaction.response.send_message(
-            "You are not an admin! Please contact an admin.",
+            "You are not an admin! Sorry, you do not have access to this.",
             ephemeral=True
         )
         return False

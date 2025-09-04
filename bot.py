@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from src.db import init_db_pool
 
 from src.commands.report import Report
+from src.commands.standings import Standings
 from src.commands.test import Test
 
 load_dotenv()
@@ -23,6 +24,7 @@ class CFBot(commands.Bot):
         await init_db_pool()
 
         await self.add_cog(Report(self))
+        await self.add_cog(Standings(self))
         await self.add_cog(Test(self))
 
         self.tree.copy_global_to(guild=discord.Object(id=GUILD_ID))
