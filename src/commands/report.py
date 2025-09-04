@@ -2,7 +2,7 @@ import discord
 from discord import app_commands, ui
 from discord.ext import commands
 
-from src.db import get_teams, add_result, get_users, get_team
+from src.db import get_teams, add_result, get_users, get_team, maybe_auto_advance_week
 from src.utils import validate_user, validate_opponent
 
 
@@ -105,6 +105,18 @@ class ReportModal(ui.Modal):
 
         # TODO: upsert into DB (games table) using the selected opponent and scores
         await interaction.response.send_message(summary, ephemeral=True)
+
+        # After recording, check if all users have reported and advance automatically
+        try:
+            advanced = await maybe_auto_advance_week()
+            if advanced:
+                channel = interaction.channel
+                await channel.send(
+                    f"📅 All reports received. Advancing to Week {advanced['week_num']} ({advanced['year']})."
+                )
+        except Exception:
+            # Do not fail the user flow if auto-advance check errors
+            pass
 
     async def on_error(self, error: Exception, interaction: discord.Interaction) -> None:
         try:

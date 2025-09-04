@@ -8,6 +8,7 @@ from src.db import init_db_pool
 from src.commands.report import Report
 from src.commands.standings import Standings
 from src.commands.test import Test
+from src.commands.advance import Advance
 
 load_dotenv()
 BOT_TOKEN = os.getenv('DISCORD_TOKEN')
@@ -26,6 +27,7 @@ class CFBot(commands.Bot):
         await self.add_cog(Report(self))
         await self.add_cog(Standings(self))
         await self.add_cog(Test(self))
+        await self.add_cog(Advance(self))
 
         self.tree.copy_global_to(guild=discord.Object(id=GUILD_ID))
 
