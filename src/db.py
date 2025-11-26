@@ -192,16 +192,48 @@ async def _get_active_week_row_for_update(conn) -> dict | None:
 
 async def _advance_to_next_week(conn, week_num: int, year: int) -> dict | None:
     await conn.execute("UPDATE weeks SET active = FALSE WHERE active = TRUE;")
+
+    # weeks 0 - 15 regular season
+    # weeks 16-20 post season
+    # week 21 is offseason
+
+    if week_num == 21:
+        print("New Season!!!")
+        new_year = year + 1
+        new_week = 0
+
+    else:
+        new_year = year
+        new_week = week_num + 1
+
     new_row = await conn.fetchrow(
         """
         INSERT INTO weeks (week_num, year, active, created_at)
         VALUES ($1, $2, TRUE, now())
         RETURNING week_num, year, active, created_at;
         """,
-        week_num + 1,
-        year,
+        new_week,
+        new_year,
     )
-    return dict(new_row) if new_row else None
+
+    try:
+        new_row = dict(new_row)
+
+        if week_num == 21:
+            print("offseason!!")
+            new_row[week_num] = 'Offseason'
+        elif week_num == 16:
+            print("Conference championship week!!")
+            new_row[week_num] = 'Conference Championships'
+        elif week_num > 16:
+            print("Bowl weeks!!!")
+            post_week = week_num % 16
+            new_row['week_num'] = f'Bowl Week {post_week}'
+
+    except:
+        new_row = None
+
+    return new_row
 
 async def _users_report_counts(conn, week_num: int) -> tuple[int, int]:
     total_users_row = await conn.fetchrow("SELECT COUNT(*) AS c FROM users;")

@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:14
+    container_name: cfb-bot-db
+    environment:
+      POSTGRES_USER: ethan
+      POSTGRES_PASSWORD: WarEagle
+      POSTGRES_DB: cfb26
+    volumes:
+      - cfb26_data_v2:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  bot:
+    build: .
+    env_file: .env
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://ethan:WarEagle@db:5432/cfb26
+volumes:
+  cfb26_data_v2:
