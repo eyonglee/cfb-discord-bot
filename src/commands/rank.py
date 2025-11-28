@@ -42,7 +42,7 @@ class Rank(commands.Cog):
         for idx, u in enumerate(users_sorted, start=1):
             name = u.get("username")
             team = await get_user_team(u["discord_id"])
-            team_str = f" (Team {team})" if team is not None else ""
+            team_str = f" ({team['name']})" if team is not None else ""
             lines.append(f"{idx}. {name}{team_str}")
 
         content = "🏅 **Current Coaches (for ranking):**\n" + "\n".join(lines)
